@@ -9,7 +9,9 @@ import './Graph.css';
 interface IProps {
   data: ServerRespond[],
 }
-
+interface IState {
+    timestamps: Set<string>;
+}
 /**
  * Perspective library adds load to HTMLElement prototype.
  * This interface acts as a wrapper for Typescript compiler.
@@ -22,14 +24,23 @@ interface PerspectiveViewerElement {
  * React component that renders Perspective based on data
  * parsed from its parent through data property.
  */
-class Graph extends Component<IProps, {}> {
-  // Perspective table
-  table: Table | undefined;
-
-  render() {
-    return React.createElement('perspective-viewer');
-  }
-
+class Graph extends Component<IProps, IState> {
+    constructor(props: IProps) {
+        super(props);
+        this.state = {
+            timestamps: new Set(),
+        };
+    }
+filterData = (data: ServerRespond[]) => {
+        return data.filter(d => {
+            if (!this.state.timestamps.has(d.timestamp)) {
+                this.state.timestamps.add(d.timestamp);
+                return true;
+            } else {
+                return false;
+            }
+        });
+    };
   componentDidMount() {
     // Get element to attach the table from the DOM.
     const elem: PerspectiveViewerElement = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
@@ -55,19 +66,17 @@ class Graph extends Component<IProps, {}> {
   componentDidUpdate() {
     // Everytime the data props is updated, insert the data into Perspective table
     if (this.table) {
-      // As part of the task, you need to fix the way we update the data props to
-      // avoid inserting duplicated entries into Perspective table again.
-      this.table.update(this.props.data.map((el: any) => {
-        // Format the data from ServerRespond to the schema
-        return {
-          stock: el.stock,
-          top_ask_price: el.top_ask && el.top_ask.price || 0,
-          top_bid_price: el.top_bid && el.top_bid.price || 0,
-          timestamp: el.timestamp,
-        };
-      }));
-    }
-  }
+        const filteredData = this.filterData(this.props.data)
+   this.table.update(filteredData.map((el: any) => {
+     return {
+stock: el.stock,
+top_ask_price: el.top_ask && el.top_ask.price || 0,
+top_bid_price: el.top_bid && el.top_bid.price || 0,
+timestamp: el.timestamp,
+};
+}));
 }
-
+}
+}
+      
 export default Graph;
