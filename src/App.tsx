@@ -42,7 +42,11 @@ class App extends Component<{}, IState> {
       this.setState({ data: [...this.state.data, ...serverResponds] });
     });
   }
-
+componentDidMount() {
+    setInterval(() => {
+        this.getDataFromServer();
+    }, 100);
+}
   /**
    * Render the App react component
    */
